@@ -55,3 +55,12 @@ yarn-error.log*
 /public/translation-runtime/
 /public/translation-worker.js
 /public/pdf.worker.min.mjs
+
+# Android build outputs and signing material
+/android/.gradle/
+/android/**/build/
+/android/app/src/main/assets/
+/android/local.properties
+*.jks
+*.keystore
+*.p12

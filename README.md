@@ -73,3 +73,7 @@ pnpm build:static
 Словарь воспроизводится из `public/dictionary/source.tar.xz`; языковой runtime и PDF-воркер копируются из npm-пакетов. Сгенерированные файлы исключены из Git. Исходный архив словаря и лицензии включены в репозиторий.
 
 FreeDict/WikDict, Karl Bartel и участники Wiktionary через DBnary, CC BY-SA 3.0. Сведения и изменения: [app/DICTIONARY-LICENSE.md](app/DICTIONARY-LICENSE.md), [public/dictionary/metadata.json](public/dictionary/metadata.json). Transformers.js и OPUS-MT: Apache-2.0; ONNX Runtime: MIT.
+
+## Android
+
+Исходники APK и инструкция самостоятельной сборки: [docs/android-build-ru.md](docs/android-build-ru.md).

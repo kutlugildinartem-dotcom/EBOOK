@@ -1,0 +1,43 @@
+name: Build Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['android/**', 'app/**', 'translation/**', 'scripts/build-*.mjs', '.github/workflows/android.yml', 'package.json', 'pnpm-lock.yaml']
+permissions:
+  contents: read
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - run: corepack enable && corepack prepare pnpm@11.25.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prepare:assets
+      - run: node tests/reader-interactions.test.mjs && node tests/import-book.test.mjs
+      - run: pnpm build:static
+      - run: node scripts/build-android-assets.mjs
+      - run: gradle -p android assembleRelease
+      - name: Package APK and verification tools
+        run: |
+          mkdir -p apk-output
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk apk-output/Leaf-unsigned.apk
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" apk-output/apksigner.jar
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging apk-output/Leaf-unsigned.apk > apk-output/apk-metadata.txt
+          sha256sum apk-output/Leaf-unsigned.apk > apk-output/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Leaf-Android-build
+          path: apk-output/
+          retention-days: 30

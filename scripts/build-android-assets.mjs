@@ -1,0 +1,11 @@
+import fs from 'node:fs/promises';import path from 'node:path';import{fileURLToPath}from'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),out=path.join(root,'android/app/src/main/assets');
+await fs.mkdir(out,{recursive:true});
+let html=await fs.readFile(path.join(root,'dist-static/index.html'),'utf8');
+html=html.replaceAll('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/','https://appassets.androidplatform.net/assets/translation-runtime/').replaceAll('https://cdn.jsdelivr.net/npm/pdfjs-dist@6.4.299/build/pdf.worker.min.mjs','https://appassets.androidplatform.net/assets/pdf.worker.min.mjs');
+await fs.writeFile(path.join(out,'index.html'),html);
+await fs.cp(path.join(root,'public/translation-runtime'),path.join(out,'translation-runtime'),{recursive:true});
+await fs.copyFile(path.join(root,'public/pdf.worker.min.mjs'),path.join(out,'pdf.worker.min.mjs'));
+await fs.mkdir(path.join(out,'dictionary'),{recursive:true});
+for(const file of ['LICENSE.txt','metadata.json','source.tar.xz'])await fs.copyFile(path.join(root,'public/dictionary',file),path.join(out,'dictionary',file));
+console.log('Android assets contain the latest reader, dictionary, PDF worker and WASM runtime.');
