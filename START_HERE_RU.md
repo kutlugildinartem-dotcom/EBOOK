@@ -52,3 +52,7 @@ GitHub Pages размещает статические файлы и не зап
 Справка GitHub: https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 
 Словарь пересобирается из включённого `public/dictionary/source.tar.xz`, PDF-воркер и среда перевода копируются из установленных npm-пакетов. Это сохраняет весь исходный материал, не дублируя десятки мегабайт сборочных файлов в Git.
+
+## Чтение без панелей
+
+Свайп вверх открывает меню со всеми командами. Разведите два пальца для обзора страниц. На компьютере используйте M и O. Подробности жестов, исправлений импорта и проверки: [docs/reader-update-ru.md](docs/reader-update-ru.md).

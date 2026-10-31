@@ -22,6 +22,8 @@ jobs:
       - run: pnpm prepare:assets
       - run: node tests/language-engine.test.mjs
       - run: node tests/translation-selection.test.mjs
+      - run: node tests/reader-interactions.test.mjs
+      - run: node tests/import-book.test.mjs
       - run: pnpm build:static
       - uses: actions/upload-pages-artifact@v4
         with:

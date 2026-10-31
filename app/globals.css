@@ -28,3 +28,14 @@
 /* Orthographic cover rotation keeps upper/lower edges horizontal during opening. */
 .book-scene,.book-open{perspective:none!important}.book-scene{transform-style:preserve-3d}.book-cover-trigger{transform-origin:3px center}.book-cover-trigger:focus-visible{outline-offset:7px}
 .cover-front .cover-face{gap:12px;padding:20px 14px 18px 20px}.cover-front .cover-face>strong{font-size:clamp(16px,1.5vw,22px);line-height:1.22;-webkit-line-clamp:5;overflow-wrap:normal;word-break:normal;flex-shrink:1}.cover-front .cover-face>small{line-height:1.35}.compact-books .cover-front .cover-face>strong{font-size:18px}@media(max-width:600px){.cover-front .cover-face{padding:18px 10px 16px 17px;gap:10px}.cover-front .cover-face>strong,.compact-books .cover-front .cover-face>strong{font-size:17px}}
+
+/* Immersive reading: the whole viewport belongs to the book. */
+.immersive-reader .reading-canvas{padding:max(26px,env(safe-area-inset-top)) max(25px,env(safe-area-inset-right)) max(26px,env(safe-area-inset-bottom)) max(25px,env(safe-area-inset-left));touch-action:none;user-select:none;-webkit-user-select:none;scrollbar-width:none;overscroll-behavior:none;outline:none}
+.immersive-reader .reading-canvas::-webkit-scrollbar{display:none}
+.immersive-reader .reader-word{touch-action:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.reader-menu-context{display:flex;justify-content:space-between;align-items:center;gap:15px;margin:18px 0 12px;font-size:11px;line-height:1.5}
+.reader-menu-context strong{font-weight:500}.reader-menu-context span{color:var(--muted);flex-shrink:0}
+.menu-page-controls{display:flex;gap:10px;margin-bottom:12px}.menu-page-controls button{flex:1}
+.overview-actions{display:flex;flex-wrap:wrap;gap:8px;padding:0 34px 18px;flex-shrink:0}.overview-actions button{padding:9px 12px;font-size:10px}
+@media(min-width:900px){.immersive-reader .reading-canvas{padding:40px clamp(60px,10vw,190px)}}
+@media(max-width:600px){.immersive-reader .reading-canvas{padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(24px,env(safe-area-inset-bottom))}.overview-actions{padding:0 20px 15px}.reader-menu-context{align-items:flex-start}}

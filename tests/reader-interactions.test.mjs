@@ -1,0 +1,20 @@
+import fs from 'node:fs/promises';import assert from 'node:assert/strict';import ts from 'typescript';
+const load=async file=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(await fs.readFile(file,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText).toString('base64'));
+const g=await load('app/reader-gestures.ts'),word={start:10,end:14};
+let t=g.beginGesture(1,200,200,0,word);assert.equal(g.finishGesture(t,200,200,120),'word');
+t=g.beginGesture(1,200,200,0,word);g.advanceGesture(t,170,201,60);assert.equal(t.mode,'navigate');g.armGesture(t,2000);assert.equal(t.mode,'navigate');assert.equal(g.finishGesture(t,70,201,2200),'next','A swipe cannot become a selection after pausing');
+t=g.beginGesture(1,200,400,0,word);g.advanceGesture(t,202,350,90);assert.equal(g.finishGesture(t,202,250,220),'settings','Upward swipe beginning on a word opens the menu');
+t=g.beginGesture(1,200,400,0,word);g.armGesture(t,350);assert.equal(t.mode,'hold');g.advanceGesture(t,160,401,500);assert.equal(t.mode,'select');assert.equal(g.finishGesture(t,50,401,700),'selection');
+t=g.beginGesture(1,200,400,0,word);g.advanceGesture(t,201,402,70);assert.equal(t.mode,'pending');g.armGesture(t,1000);assert.equal(g.finishGesture(t,201,402,1050),'selection');
+t=g.beginGesture(1,200,400,0,undefined);assert.equal(g.finishGesture(t,200,400,180),'none');
+t=g.beginGesture(1,200,400,0,word,0,true,false);assert.equal(g.finishGesture(t,201,200,180),'none','Reading a long translated page scrolls in its body');
+t=g.beginGesture(1,200,700,0,word,0,true,true);assert.equal(g.finishGesture(t,201,500,180),'settings','The bottom edge always opens settings, including a translated page');
+assert(g.opensOverview(100,140));assert(g.opensOverview(100,60));assert(!g.opensOverview(100,112));assert(!g.opensOverview(10,13));
+for(let i=0;i<1000;i++){const x=150+i%31,y=300+i%13,start=i*5000,gesture=g.beginGesture(1,x,y,start,word);g.advanceGesture(gesture,x-15,y+(i%5-2),start+30);g.armGesture(gesture,start+1500);assert.equal(g.finishGesture(gesture,x-90,y+(i%11-5),start+1600),'next');assert.equal(gesture.mode,'navigate');}
+const model=await load('app/book-model.ts');
+for(const text of ['The Picture of Dorian Gray','Lord Henry Wotton','Book lovers read every evening.','Chapter books are popular.','Introduction to the art of living.'])assert.equal(model.looksLikeHeading(text),false,text);
+for(const text of ['CHAPTER I','Chapter 12','Chapter I · Down the Rabbit-Hole','PART TWO','Глава первая','II','EPILOGUE'])assert(model.looksLikeHeading(text),text);
+const text='CHAPTER I\nThe Beginning\n\nDorian Gray looked around the room.\nLord Henry Wotton\nwas standing near the door.\n\nThe Picture of Dorian Gray\n\nCHAPTER II\n\nA New Morning\n\nThe story continues.';
+const publication=model.publicationFromText(text);assert.deepEqual(publication.blocks.filter(b=>b.kind==='heading').map(b=>b.text),['CHAPTER I','The Beginning','CHAPTER II','A New Morning']);assert(publication.text.includes('Lord Henry Wotton was standing'));
+const legacy={id:'a',title:'Dorian Gray',author:'Oscar Wilde',text:publication.text,position:55,blocks:publication.blocks.map(b=>({...b,kind:'heading'}))};const repaired=model.repairLegacyBook(legacy);assert.equal(repaired.text,legacy.text);assert.equal(repaired.position,55);assert.deepEqual(repaired.blocks.map(b=>[b.start,b.end]),legacy.blocks.map(b=>[b.start,b.end]));assert.equal(repaired.blocks.find(b=>b.text==='The Picture of Dorian Gray').kind,'paragraph');assert.equal(model.repairLegacyBook(repaired),repaired);
+console.log('Tap, hold-drag, stationary hold, upward swipe, scrolling, both pinch directions, 1000 swipe traces, Dorian Gray headings and legacy offset preservation passed.');
