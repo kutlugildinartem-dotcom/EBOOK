@@ -1,0 +1,5 @@
+import fs from 'node:fs/promises';import path from 'node:path';import {createRequire} from 'node:module';
+const root=path.resolve(path.dirname(new URL(import.meta.url).pathname),'..'),require=createRequire(root+'/package.json');const {build}=require(require.resolve('esbuild',{paths:[require.resolve('vite')]}));
+await fs.mkdir(root+'/public/translation-runtime',{recursive:true});const packageDist=path.dirname(require.resolve('@huggingface/transformers'));for(const name of ['ort-wasm-simd-threaded.jsep.mjs','ort-wasm-simd-threaded.jsep.wasm'])await fs.copyFile(packageDist+'/'+name,root+'/public/translation-runtime/'+name);
+await fs.copyFile(path.join(packageDist,'../LICENSE'),root+'/public/translation-runtime/TRANSFORMERS-LICENSE.txt');
+await build({entryPoints:[root+'/translation/worker.ts'],outfile:root+'/public/translation-worker.js',bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,legalComments:'eof',define:{'process.env.NODE_ENV':'"production"'},logLevel:'warning'});console.log('Browser translator worker and WASM assets prepared.');

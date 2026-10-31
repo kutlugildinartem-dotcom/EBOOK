@@ -1,0 +1,8 @@
+{
+  "entries": 57076,
+  "version": "2025.11.23",
+  "source": "FreeDict / WikDict, Karl Bartel; Wiktionary contributors via DBnary",
+  "license": "CC BY-SA 3.0",
+  "sourceUrl": "https://download.freedict.org/dictionaries/eng-rus/2025.11.23/freedict-eng-rus-2025.11.23.src.tar.xz",
+  "changes": "TEI converted to JSON, accents and wiki markup normalized; entries grouped by initial letter. Fast v4 index retains every translation and sense per part of speech with compact domain tags, gzip-compressed for one-time loading."
+}
