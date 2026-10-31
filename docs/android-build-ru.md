@@ -15,7 +15,7 @@ Workflow: `.github/workflows/android.yml`, название в Actions — **Bui
 После извлечения файлов сборки и архива подписи в одну папку:
 
 ```sh
-java -jar apksigner.jar sign --ks leaf-release.p12 --ks-key-alias leaf --ks-pass file:keystore-password.txt --key-pass file:keystore-password.txt --out Leaf.apk Leaf-unsigned.apk
+java -jar apksigner.jar sign --ks leaf-release.p12 --ks-key-alias leaf --ks-pass file:keystore-password.txt --out Leaf.apk Leaf-unsigned.apk
 java -jar apksigner.jar verify --verbose Leaf.apk
 ```
 
