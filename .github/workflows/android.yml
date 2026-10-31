@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     paths: ['android/**', 'app/**', 'translation/**', 'scripts/build-*.mjs', '.github/workflows/android.yml', 'package.json', 'pnpm-lock.yaml']
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:

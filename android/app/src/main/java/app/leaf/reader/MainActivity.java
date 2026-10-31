@@ -46,7 +46,13 @@ public final class MainActivity extends Activity {
             .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this)).build();
         webView.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                return assets.shouldInterceptRequest(request.getUrl());
+                WebResourceResponse response = assets.shouldInterceptRequest(request.getUrl());
+                if (response != null) {
+                    String path = request.getUrl().getPath();
+                    if (path != null && (path.endsWith(".mjs") || path.endsWith(".js"))) response.setMimeType("text/javascript");
+                    if (path != null && path.endsWith(".wasm")) response.setMimeType("application/wasm");
+                }
+                return response;
             }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
