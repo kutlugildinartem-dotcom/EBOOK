@@ -26,6 +26,7 @@ public final class MainActivity extends Activity {
     private static final String HOME = "https://appassets.androidplatform.net/assets/index.html";
     private static final int PICK_FILE = 41;
     private WebView webView;
+    private AppUpdates updates;
     private ValueCallback<Uri[]> chooser;
 
     @Override public void onCreate(Bundle state) {
@@ -56,6 +57,11 @@ public final class MainActivity extends Activity {
             }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
+                if ("leaf".equals(uri.getScheme()) && "check-update".equals(uri.getHost())) {
+                    String current = webView.getUrl();
+                    if (request.isForMainFrame() && request.hasGesture() && current != null && current.startsWith(HOME) && updates != null) updates.check(true);
+                    return true;
+                }
                 if ("https".equals(uri.getScheme()) && "appassets.androidplatform.net".equals(uri.getHost())) return false;
                 if (request.isForMainFrame() && ("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()))) {
                     try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
@@ -86,10 +92,12 @@ public final class MainActivity extends Activity {
             }
         });
         setContentView(webView);
+        updates = new AppUpdates(this);
         if (state == null || webView.restoreState(state) == null) webView.loadUrl(HOME);
     }
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == AppUpdates.INSTALL_PERMISSION && updates != null) updates.permissionResult();
         if (requestCode == PICK_FILE && chooser != null) {
             chooser.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
             chooser = null;
@@ -110,8 +118,9 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onSaveInstanceState(Bundle state) { webView.saveState(state); super.onSaveInstanceState(state); }
     @Override protected void onPause() { webView.onPause(); super.onPause(); }
-    @Override protected void onResume() { super.onResume(); if (webView != null) webView.onResume(); }
+    @Override protected void onResume() { super.onResume(); if (webView != null) webView.onResume(); if (updates != null) updates.check(false); }
     @Override protected void onDestroy() {
+        if (updates != null) updates.close();
         if (chooser != null) { chooser.onReceiveValue(null); chooser = null; }
         if (webView != null) { webView.destroy(); webView = null; }
         super.onDestroy();

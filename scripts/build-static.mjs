@@ -15,3 +15,5 @@ const css=await fs.readFile(root+'/app/globals.css','utf8');const script=result.
 await fs.mkdir(root+'/dist-static',{recursive:true});
 await fs.writeFile(root+'/dist-static/index.html','<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Leaf — читать и понимать</title><style>'+css+'</style></head><body><div id="root"></div><script>'+script+'</script></body></html>');
 new Function(result.outputFiles[0].text);console.log('Standalone HTML built; JavaScript syntax verified.');
+
+try{await fs.cp(root+'/android-update',root+'/dist-static/android-update',{recursive:true});}catch(error){if(error.code!=='ENOENT')throw error;}

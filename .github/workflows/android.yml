@@ -31,6 +31,7 @@ jobs:
       - run: node tests/reader-interactions.test.mjs && node tests/import-book.test.mjs
       - run: pnpm build:static
       - run: node scripts/build-android-assets.mjs
+      - run: javac -d /tmp/leaf-policy-classes android/app/src/main/java/app/leaf/reader/UpdatePolicy.java tests/android/UpdatePolicyTest.java && java -ea -cp /tmp/leaf-policy-classes UpdatePolicyTest
       - run: gradle -p android assembleRelease
       - name: Package APK and verification tools
         run: |
