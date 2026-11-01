@@ -77,3 +77,5 @@ FreeDict/WikDict, Karl Bartel и участники Wiktionary через DBnary
 ## Android
 
 Исходники APK и инструкция самостоятельной сборки: [docs/android-build-ru.md](docs/android-build-ru.md).
+
+Изменения 1.0.1: [очистка колонтитулов, компактный перевод и заполнение страницы](docs/update-1.0.1-ru.md).

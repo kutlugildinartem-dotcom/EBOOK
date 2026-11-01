@@ -1,5 +1,5 @@
 export type TextBlock={kind:'paragraph'|'heading';text:string;start:number;end:number;level?:number};
-export type Book={id:string;title:string;author:string;text:string;blocks?:TextBlock[];position:number;page?:number;demo?:boolean;added?:number;cover?:string;coverColor?:string;parserVersion?:number;sourceFormat?:string};
+export type Book={id:string;title:string;author:string;text:string;blocks?:TextBlock[];position:number;page?:number;demo?:boolean;added?:number;cover?:string;coverColor?:string;parserVersion?:number;sourceFormat?:string;headerCleanup?:{version:1;sourceText:string;sourceBlocks:TextBlock[];ranges:{start:number;end:number}[];sourceAnnotations:unknown[]}};
 export type Publication={title?:string;author?:string;text:string;blocks:TextBlock[];cover?:string;parserVersion?:number;sourceFormat?:string};
 export type PageFragment={block:number;start:number;end:number;continued:boolean};
 export type ReaderPage={start:number;end:number;fragments:PageFragment[];chapter:string};

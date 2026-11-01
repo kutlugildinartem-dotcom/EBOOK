@@ -25,3 +25,6 @@ export function layoutPages(text:string,width:number,height:number,fontSize:numb
 
 export async function loadState<T>(key:string):Promise<T|undefined>{const db=await database();try{return await new Promise((resolve,reject)=>{const request=db.transaction('state').objectStore('state').get(key);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}finally{db.close();}}
 export async function storeState(key:string,value:unknown){const db=await database();try{await new Promise<void>((resolve,reject)=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put(value,key);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}finally{db.close();}}
+
+/** Text and annotation offsets must migrate together, or neither is changed. */
+export async function commitHeaderCleanup(books:Book[],notes:Record<string,unknown[]>){const db=await database();try{await new Promise<void>((resolve,reject)=>{const tx=db.transaction(['books','state'],'readwrite');for(const book of books)tx.objectStore('books').put(book);tx.objectStore('state').put(notes,'notes-v4');tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}finally{db.close();}}

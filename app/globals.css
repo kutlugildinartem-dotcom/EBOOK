@@ -39,3 +39,15 @@
 .overview-actions{display:flex;flex-wrap:wrap;gap:8px;padding:0 34px 18px;flex-shrink:0}.overview-actions button{padding:9px 12px;font-size:10px}
 @media(min-width:900px){.immersive-reader .reading-canvas{padding:40px clamp(60px,10vw,190px)}}
 @media(max-width:600px){.immersive-reader .reading-canvas{padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(24px,env(safe-area-inset-bottom))}.overview-actions{padding:0 20px 15px}.reader-menu-context{align-items:flex-start}}
+
+/* A tap opens a small translation. Details have no layout until explicitly requested. */
+.translation-card.popup-v8{width:min(280px,calc(100vw - 24px));padding:9px 10px 8px;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;gap:0;font-size:11px;box-shadow:0 5px 22px #1720142b}
+.popup-v8>header{align-items:flex-start;gap:6px;flex-shrink:0}.popup-v8 .popup-source{flex:1;font:14px/1.35 Georgia,serif;max-height:38px;overflow:auto;padding-top:2px}.popup-v8 .popup-close{width:22px;height:22px}
+.popup-v8>.popup-translation{font:500 18px/1.35 Georgia,serif;margin:3px 0 8px;max-height:73px;overflow:auto;white-space:pre-wrap;flex-shrink:0}.popup-v8.phrase-popup>.popup-translation{max-height:115px;font-size:15px}
+.popup-mini-actions{display:grid;grid-template-columns:1.05fr 1fr .95fr .8fr;gap:3px;flex-shrink:0}.popup-mini-actions>button{display:flex;align-items:center;justify-content:center;gap:3px;min-width:0;height:28px;padding:3px 2px;font-size:10px;border:1px solid var(--line);border-radius:5px;color:var(--muted);white-space:nowrap}.popup-mini-actions>button:hover,.popup-mini-actions>button[aria-expanded=true]{background:var(--soft);color:var(--accent);border-color:var(--accent)}
+.popup-v8>.popup-scroll{margin-top:8px;padding:9px 1px 2px;border-top:1px solid var(--line);flex:1;min-height:0;overflow:auto}.popup-v8 .popup-context-source{font-size:12px;line-height:1.5;margin:8px 0}.popup-v8 .online-translation{font-size:12px;line-height:1.6}.popup-v8 .all-meanings section:last-child{margin-bottom:0}.popup-external{display:inline-block;font-size:10px;color:var(--accent);text-decoration:underline;margin-top:8px;padding:3px 0}
+
+.page-content{display:flow-root}
+/* The last line may approach the lower inset; there are no reserved toolbar rows. */
+.immersive-reader .reading-canvas{padding-top:max(18px,env(safe-area-inset-top));padding-bottom:max(18px,env(safe-area-inset-bottom))}
+@media(min-width:900px){.immersive-reader .reading-canvas{padding-top:26px;padding-bottom:22px}}

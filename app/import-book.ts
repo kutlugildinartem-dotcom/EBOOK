@@ -1,7 +1,8 @@
 import {publicationFromBlocks,publicationFromText,looksLikeHeading,type Publication,type TextBlock} from './book-model';
 import {pdfLines,pdfTextBlocks,type PdfPage} from './pdf-layout';
+import {cleanPublicationHeaders,cleanPlainTextHeaders} from './running-matter';
 const blockTags=new Set(['BODY','MAIN','ARTICLE','SECTION','DIV','H1','H2','H3','H4','H5','H6','P','LI','UL','OL','BLOCKQUOTE','PRE','TABLE','TR','TD','TH','FIGCAPTION']);
-function noise(node:Element){return ['HEAD','SCRIPT','STYLE','NAV','IFRAME','OBJECT','FORM'].includes(node.tagName.toUpperCase())||node.hasAttribute('hidden')||node.getAttribute('aria-hidden')==='true'||/(?:^|\s)(?:toc|landmarks|page-list)(?:\s|$)/.test(node.getAttribute('epub:type')||'')||node.getAttribute('role')==='doc-toc';}
+function noise(node:Element){return ['HEAD','SCRIPT','STYLE','NAV','IFRAME','OBJECT','FORM'].includes(node.tagName.toUpperCase())||node.hasAttribute('hidden')||node.getAttribute('aria-hidden')==='true'||/(?:^|\s)(?:toc|landmarks|page-list)(?:\s|$)/.test(node.getAttribute('epub:type')||'')||['doc-toc','doc-pageheader','doc-pagefooter'].includes(node.getAttribute('role')||'')||/(?:^|[\s_-])(?:running[\s_-]?(?:header|footer)|page[\s_-]?(?:header|footer)|kolontitul)(?:$|[\s_-])/i.test((node.getAttribute('class')||'')+' '+(node.getAttribute('id')||''));}
 function inlineText(node:Node):string{if(node.nodeType===3)return node.textContent||'';if(node.nodeType!==1)return'';const el=node as Element;if(noise(el))return'';if(el.tagName.toUpperCase()==='BR')return' ';return Array.from(el.childNodes).map(inlineText).join('');}
 /** Use document structure. A title-cased line in a paragraph is still a paragraph. */
 export function htmlBlocks(doc:Document){
@@ -20,7 +21,7 @@ const elements=(doc:Document|Element,name:string)=>Array.from(doc.getElementsByT
 const binaryUrl=(bytes:Uint8Array,type:string)=>{let result='';for(let i=0;i<bytes.length;i+=16384)result+=String.fromCharCode(...bytes.subarray(i,i+16384));return 'data:'+type+';base64,'+btoa(result);};
 export async function extractPublication(file:File):Promise<Publication>{
  const ext=file.name.split('.').pop()?.toLowerCase();let publication:Publication;
- if(ext==='txt'){const text=decodeBookText(await file.arrayBuffer()),header=text.slice(0,10000);const title=header.match(/^Title:\s*(.+)$/im)?.[1].trim(),author=header.match(/^Author:\s*(.+)$/im)?.[1].trim();publication=publicationFromText(text,{title,author});} else if(ext==='docx'){const mammoth=await import('mammoth');const result=await mammoth.convertToHtml({arrayBuffer:await file.arrayBuffer()});const doc=new DOMParser().parseFromString(result.value,'text/html');publication=publicationFromBlocks(htmlBlocks(doc));}
+ if(ext==='txt'){const text=decodeBookText(await file.arrayBuffer()),header=text.slice(0,10000);const title=header.match(/^Title:\s*(.+)$/im)?.[1].trim(),author=header.match(/^Author:\s*(.+)$/im)?.[1].trim();publication=publicationFromText(cleanPlainTextHeaders(text,title||file.name.replace(/\.[^.]+$/,'').replace(/_/g,' ')),{title,author});} else if(ext==='docx'){const mammoth=await import('mammoth');const result=await mammoth.convertToHtml({arrayBuffer:await file.arrayBuffer()});const doc=new DOMParser().parseFromString(result.value,'text/html');publication=publicationFromBlocks(htmlBlocks(doc));}
  else if(ext==='epub'){
  const {unzipSync,strFromU8}=await import('fflate');const files=unzipSync(new Uint8Array(await file.arrayBuffer()));const xml=(s:string)=>new DOMParser().parseFromString(s,'application/xml');
  const container=files['META-INF/container.xml'];if(!container)throw new Error('Не удалось прочитать структуру EPUB.');const opfPath=elements(xml(strFromU8(container)),'rootfile')[0]?.getAttribute('full-path');if(!opfPath||!files[opfPath])throw new Error('EPUB повреждён или защищён.');const opf=xml(strFromU8(files[opfPath]));const base=opfPath.split('/').slice(0,-1).join('/');const resolve=(href:string,folder=base)=>decodeURIComponent(new URL((folder?folder+'/':'')+href,'https://book.local/').pathname.slice(1));
@@ -32,9 +33,9 @@ export async function extractPublication(file:File):Promise<Publication>{
  }else if(ext==='pdf'){
  const pdfjs=await import('pdfjs-dist');pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';const task=pdfjs.getDocument({data:await file.arrayBuffer()}),pdf=await task.promise,pages:PdfPage[]=[];let title:string|undefined,author:string|undefined;
  try{try{const metadata=await pdf.getMetadata(),info=metadata.info as {Title?:string;Author?:string};title=info.Title?.trim();author=info.Author?.trim();}catch{}
-  for(let pn=1;pn<=pdf.numPages;pn++){const page=await pdf.getPage(pn),content=await page.getTextContent();pages.push({height:page.getViewport({scale:1}).height,lines:pdfLines(content.items)});page.cleanup();}
- }finally{await task.destroy();}publication=publicationFromBlocks(pdfTextBlocks(pages),{title,author});
+  for(let pn=1;pn<=pdf.numPages;pn++){const page=await pdf.getPage(pn),content=await page.getTextContent();pages.push({height:page.view[3]-page.view[1],width:page.view[2]-page.view[0],lines:pdfLines(content.items)});page.cleanup();}
+ }finally{await task.destroy();}publication=publicationFromBlocks(pdfTextBlocks(pages,{title,author}),{title,author});
  }else throw new Error('Выберите EPUB, PDF, DOCX или TXT.');
- if(!publication.text.trim())throw new Error(ext==='pdf'?'Не найден текстовый слой. PDF-скану сначала нужно распознавание (OCR).':'В файле не найден читаемый текст.');return{...publication,parserVersion:2,sourceFormat:ext};
+ if(!publication.text.trim())throw new Error(ext==='pdf'?'Не найден текстовый слой. PDF-скану сначала нужно распознавание (OCR).':'В файле не найден читаемый текст.');return{...cleanPublicationHeaders(publication,file.name.replace(/\.[^.]+$/,'').replace(/_/g,' ')),parserVersion:2,sourceFormat:ext};
 }
 export async function extractBook(file:File){return (await extractPublication(file)).text;}

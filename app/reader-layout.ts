@@ -1,7 +1,7 @@
 import type {TextBlock,ReaderPage,PageFragment} from './book-model';
 export type PageMeasure={width:number;height:number;fontSize:number;fontFamily:string;lineHeight?:number};
 /** Greedy word wrapping uses the exact reader font and never inserts line breaks into paragraphs. */
-export async function paginateBook(blocks:TextBlock[],text:string,spec:PageMeasure,cancelled:()=>boolean=()=>false):Promise<ReaderPage[]>{
+async function paginateBookApprox(blocks:TextBlock[],text:string,spec:PageMeasure,cancelled:()=>boolean=()=>false):Promise<ReaderPage[]>{
  const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');if(!ctx)throw new Error('Не удалось измерить текст.');
  const width=Math.max(80,spec.width),height=Math.max(75,spec.height-4),size=spec.fontSize,lineHeight=size*(spec.lineHeight||1.6);const cache=new Map<string,number>();
  const pages:ReaderPage[]=[];let fragments:PageFragment[]=[],used=0,chapter='';
@@ -22,3 +22,25 @@ export async function paginateBook(blocks:TextBlock[],text:string,spec:PageMeasu
  push();for(let i=0;i<pages.length;i++){if(i===0)pages[i].start=0;pages[i].end=i+1<pages.length?pages[i+1].start:text.length;}return pages.length?pages:[{start:0,end:text.length,fragments:[],chapter:''}];
 }
 export function locatePage(pages:ReaderPage[],position:number){let lo=0,hi=pages.length-1;while(lo<=hi){const mid=(lo+hi)>>1;if(pages[mid].start<=position)lo=mid+1;else hi=mid-1;}return Math.max(0,hi);}
+
+/** Use the browser's real paragraph geometry so unused space is not accumulated by estimates. */
+export async function paginateBook(blocks:TextBlock[],text:string,spec:PageMeasure,cancelled:()=>boolean=()=>false):Promise<ReaderPage[]>{
+ if(!document.body||typeof document.createElement('div').getBoundingClientRect!=='function')return paginateBookApprox(blocks,text,spec,cancelled);
+ const measure=document.createElement('div');measure.className='page-content';Object.assign(measure.style,{position:'fixed',left:'-100000px',top:'0',visibility:'hidden',pointerEvents:'none',width:Math.max(80,spec.width)+'px',fontFamily:spec.fontFamily,fontSize:spec.fontSize+'px',lineHeight:String(spec.lineHeight||1.6),display:'flow-root',padding:'0',margin:'0'});document.body.appendChild(measure);
+ const pages:ReaderPage[]=[];let fragments:PageFragment[]=[],chapter='',sliceStart=performance.now();const height=Math.max(75,spec.height-1);
+ const push=()=>{if(fragments.length)pages.push({start:fragments[0].start,end:fragments[fragments.length-1].end,fragments,chapter});fragments=[];measure.replaceChildren();};
+ try{for(let b=0;b<blocks.length;b++){
+  if(cancelled())return[];const block=blocks[b],words=Array.from(block.text.matchAll(/\S+/g));if(!words.length)continue;const heading=block.kind==='heading';let wi=0;
+  while(wi<words.length){
+   if(cancelled())return[];if(performance.now()-sliceStart>14){await new Promise(resolve=>setTimeout(resolve,0));sliceStart=performance.now();}
+   const node=document.createElement(heading?'h2':'p');node.className=heading?'chapter-heading':wi?'paragraph continued':'paragraph';measure.appendChild(node);
+   const first=wi;const show=(count:number)=>{const last=words[first+count-1];node.textContent=block.text.slice(words[first].index!,last.index!+last[0].length);return measure.getBoundingClientRect().height;};
+   if(heading&&fragments.length){const h=show(words.length-first);if(h+spec.fontSize*(spec.lineHeight||1.6)*2>height){node.remove();push();continue;}}
+   let lo=1,hi=words.length-first,fit=0;
+   while(lo<=hi){const mid=(lo+hi)>>1;if(show(mid)<=height+.5){fit=mid;lo=mid+1;}else hi=mid-1;}
+   if(!fit&&fragments.length){node.remove();push();continue;}if(!fit)fit=1;show(fit);
+   const last=words[first+fit-1];if(heading)chapter=block.text;fragments.push({block:b,start:block.start+words[first].index!,end:block.start+last.index!+last[0].length,continued:first>0});wi+=fit;if(wi<words.length)push();
+  }
+ }push();for(let i=0;i<pages.length;i++){if(i===0)pages[i].start=0;pages[i].end=i+1<pages.length?pages[i+1].start:text.length;}return pages.length?pages:[{start:0,end:text.length,fragments:[],chapter:''}];
+ }finally{measure.remove();}
+}
